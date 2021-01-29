@@ -1,0 +1,1 @@
+This is where the default application server data exists. It maps into the ColdFusion container as data. You can store a .CAR file in here, and it will load during the CF container start up.

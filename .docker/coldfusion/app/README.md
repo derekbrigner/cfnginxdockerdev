@@ -1,0 +1,1 @@
+This is where the default applications exist. It maps into the ColdFusion container as app.

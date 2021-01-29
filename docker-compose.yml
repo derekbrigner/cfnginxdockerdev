@@ -1,0 +1,52 @@
+version: "3" 
+services:
+  coldfusion:
+    #The image version can be changed by changing the string after coldfusion: to the version you would prefer, for example, coldfusion:2016.0.16. You can view the different version of CF available at https://bintray.com/eaps/coldfusion/cf%3Acoldfusion under Versions
+    image: eaps-docker-coldfusion.bintray.io/cf/coldfusion:latest
+    container_name: coldfusion
+    expose:
+      - "8500"
+    environment:
+      acceptEULA: "YES"
+      password: "local2016"
+      enableSecureProfile: "false"
+    #Adds an environment variable to the ColdFusion container
+    env_file: 
+      - .docker/.env.local
+    #You can create domain references such as databases can added as references in the hosts file if they are IP accessible. For example: 
+    #extra_hosts:
+      #- "db:123.456.78.90"
+    healthcheck:
+      test: curl -f http://localhost/
+      interval: 1m
+      timeout: 3s
+    hostname: coldfusion
+    networks:
+      - cfdev
+    ports:
+      - "8500:8500"
+    volumes:
+      #Maps a volume into the ColdFusion container that contains application code
+      - "./.docker/coldfusion/app:/app"
+      #Maps a volume into the ColdFusion container that contains ColdFusion configuration information, such as a CAR file.
+      - "./.docker/coldfusion/data:/data"
+  nginx:
+    image: nginx:1.17
+    #Turns off logging/debugging in the NGINX container
+    #command: [nginx-debug, '-g', 'daemon off;']
+    container_name: nginx
+    depends_on: 
+      - "coldfusion"
+    extra_hosts:
+      #Create hosts file entries for the two applications(directories) being served from the NGINX container. If you wish to access them from these domain names from your host machine, you must add them as entries in the host machines hosts file.
+      - myappone.loc:127.0.0.2
+      - myapptwo.loc:127.0.0.3
+    networks:
+      - cfdev
+    ports:
+      - 80:80
+    volumes:
+      #Map a volume to the conf.d directory from this project to the conf.d directory in the NGINX container
+      - ./.docker/nginx/conf.d:/etc/nginx/conf.d
+networks:
+  cfdev:
